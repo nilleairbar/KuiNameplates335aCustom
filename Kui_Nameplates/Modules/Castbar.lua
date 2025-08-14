@@ -21,7 +21,7 @@ local function ResetFade(f)
 
 	kui.frameFadeRemoveFrame(f.castbar)
 	f.castbar.shield:Hide()
-	f.castbar:Hide()
+	f.castbar:Show()
 	f.castbar:SetAlpha(1)
 end
 
@@ -178,18 +178,74 @@ function mod:CreateCastbar(frame)
 	if frame.castbar then
 		return frame.castbar
 	end
+	
+	
 	-- container ---------------------------------------------------------------
 	frame.castbar = CreateFrame("Frame", nil, frame)
 	frame.castbar:SetFrameLevel(1)
-	frame.castbar:Hide()
+	frame.castbar:Show()
+	frame.castbar:SetSize(300,300)
 
-	-- background --------------------------------------------------------------
+	local castbarWidth = 320
+	-- border
+	frame.castbar.border = frame.castbar:CreateTexture(nil, "ARTWORK")
+	frame.castbar.border:SetDrawLayer("ARTWORK", 10)
+	frame.castbar.border:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\castbar\\castbar")
+	frame.castbar.border:SetPoint("CENTER", frame.bg.fill, "CENTER", 0, -32)
+	frame.castbar.border:SetSize(castbarWidth,castbarWidth*0.25)
+	frame.castbar.border:SetVertexColor(0.75,0.6,0,1)
+
+	-- cast bar ------------------------------------------------------------
+	frame.castbar.bar = CreateFrame("StatusBar", nil, frame.castbar)
+	frame.castbar.bar:SetStatusBarTexture(addon.bartexture)
+	frame.castbar.bar:GetStatusBarTexture():SetDrawLayer("BORDER", 2)
+
+	frame.castbar.bar:SetPoint("CENTER", frame.castbar.border, "CENTER", 13, 0)
+	frame.castbar.bar:SetSize(140,11)
+
+	frame.castbar.bar:SetMinMaxValues(0, 1)
+
+	-- spark
+	frame.castbar.spark = frame.castbar.bar:CreateTexture(nil, "ARTWORK")
+	frame.castbar.spark:SetDrawLayer("ARTWORK", 6)
+	frame.castbar.spark:SetVertexColor(1, 1, 0.8)
+	frame.castbar.spark:SetTexture("Interface\\AddOns\\Kui_Nameplates\\Media\\t\\spark")
+	frame.castbar.spark:SetPoint("TOP", frame.castbar.bar:GetRegions(), "TOPRIGHT", 0, 3)
+	frame.castbar.spark:SetPoint("BOTTOM", frame.castbar.bar:GetRegions(), "BOTTOMRIGHT", 0, -3)
+	frame.castbar.spark:SetWidth(6)
+
+	-- uninterruptible cast shield -----------------------------------------
+	frame.castbar.shield = frame.castbar.bar:CreateTexture(nil, "ARTWORK")
+	frame.castbar.shield:SetTexture("Interface\\AddOns\\Kui_Nameplates\\Media\\Shield")
+	frame.castbar.shield:SetTexCoord(0, 0.84375, 0, 1)
+	frame.castbar.shield:SetVertexColor(0.5, 0.5, 0.7)
+
+	frame.castbar.shield:SetSize(sizes.shield * .84375, sizes.shield)
+	frame.castbar.shield:SetPoint("LEFT", frame.castbar.bg, -7, 0)
+
+	frame.castbar.shield:SetBlendMode("BLEND")
+	frame.castbar.shield:SetDrawLayer("ARTWORK", 7)
+
+	frame.castbar.shield:Hide()
+
+
+	--[[ -- background --------------------------------------------------------------
 	frame.castbar.bg = frame.castbar:CreateTexture(nil, "ARTWORK", nil, 1)
 	frame.castbar.bg:SetTexture(kui.m.t.solid)
 	frame.castbar.bg:SetVertexColor(0, 0, 0, 0.8)
 
-	frame.castbar.bg:SetPoint("TOPLEFT", frame.bg.fill, "BOTTOMLEFT", 0, -1)
-	frame.castbar.bg:SetPoint("TOPRIGHT", frame.bg.fill, "BOTTOMRIGHT", 0, 0)
+	frame.castbar.bg:SetPoint("TOPLEFT", frame.bg.fill, "BOTTOMLEFT", 0, -14)
+	frame.castbar.bg:SetPoint("TOPRIGHT", frame.bg.fill, "BOTTOMRIGHT", 0, 13)
+
+	-- border
+	frame.castbar.border = frame.castbar:CreateTexture(nil, "ARTWORK")
+	frame.castbar:Show()
+	frame.castbar.border:SetDrawLayer("ARTWORK", 10)
+	frame.castbar.border:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\castbar\\castbar")
+	frame.castbar.border:SetPoint("TOPRIGHT", frame.castbar.bg, "TOPRIGHT", 0, 0)
+	frame.castbar.border:SetSize(312,96)
+	frame.castbar.border:SetVertexColor(0.75,0.6,0,1)
+
 
 	-- cast bar ------------------------------------------------------------
 	frame.castbar.bar = CreateFrame("StatusBar", nil, frame.castbar)
@@ -223,30 +279,30 @@ function mod:CreateCastbar(frame)
 	frame.castbar.shield:SetBlendMode("BLEND")
 	frame.castbar.shield:SetDrawLayer("ARTWORK", 7)
 
-	frame.castbar.shield:Hide()
+	frame.castbar.shield:Hide() ]]
 
 	-- cast bar text -------------------------------------------------------
 	if self.db.profile.display.spellname then
 		frame.castbar.name = frame:CreateFontString(frame.castbar.bar, {size = "small"})
-		frame.castbar.name:SetPoint("TOP", frame.castbar.bar, "BOTTOM", 0, -3)
+		frame.castbar.name:SetPoint("LEFT", frame.castbar.bar, "LEFT", 0, 1)
 	end
 
 	if self.db.profile.display.casttime then
 		frame.castbar.curr = frame:CreateFontString(frame.castbar.bar, {size = "small"})
-		frame.castbar.curr:SetPoint("LEFT", frame.castbar.bg, "RIGHT", 2, 0)
+		frame.castbar.curr:SetPoint("RIGHT", frame.castbar.bar, "RIGHT", -2, 1)
 	end
 
 	if self.db.profile.display.spellicon then
 		frame.castbar.icon = CreateFrame("Frame", nil, frame.castbar)
 
-		frame.castbar.icon.bg = frame.castbar:CreateTexture(nil, "BACKGROUND")
+		frame.castbar.icon.bg = frame.castbar:CreateTexture(nil, "BORDER")
 		frame.castbar.icon.bg:SetTexture(kui.m.t.solid)
 		frame.castbar.icon.bg:SetVertexColor(0, 0, 0, 0)
-		frame.castbar.icon.bg:SetPoint("TOPRIGHT", frame.health, "TOPLEFT", -2, 1)
+		frame.castbar.icon.bg:SetPoint("RIGHT", frame.castbar.bar, "LEFT", -6, 0)
 
-		frame.castbar.icon.tex = frame.castbar:CreateTexture(nil, "ARTWORK")
-		frame.castbar.icon.tex:SetPoint("TOPLEFT", frame.castbar.icon.bg, "TOPLEFT", 1, -1)
-		frame.castbar.icon.tex:SetPoint("BOTTOMRIGHT", frame.castbar.icon.bg, "BOTTOMRIGHT", -1, 1)
+		frame.castbar.icon.tex = frame.castbar:CreateTexture(nil, "BORDER")
+		frame.castbar.icon.tex:SetSize(21,21)
+		frame.castbar.icon.tex:SetPoint("CENTER", frame.castbar.icon.bg, "CENTER", 0, 0)
 	end
 
 	UpdateCastbar(frame)
@@ -292,7 +348,7 @@ mod:AddConfigChanged(
 	{"display", "cbheight"},
 	function()
 		sizes.cbheight = mod.db.profile.display.cbheight
-		sizes.icon = addon.db.profile.general.hheight + sizes.cbheight + 1
+		sizes.icon = sizes.cbheight
 	end,
 	UpdateCastbar
 )
@@ -390,7 +446,7 @@ function mod:OnInitialize()
 					casttime = false,
 					spellname = true,
 					spellicon = true,
-					cbheight = 5,
+					cbheight = 13,
 					barcolour = {.43, 0.47, 0.55, 1},
 					shieldbarcolour = {.8, 0.1, 0.1, 1}
 				}

@@ -19,6 +19,10 @@ local select, pairs, ipairs, type = select, pairs, ipairs, type
 local unpack, floor = unpack, math.floor
 local strfind, strsplit, tinsert = strfind, strsplit, tinsert
 local UnitExists = UnitExists
+
+-- test of local db of shown plates
+local kuiPlates = {}
+local numPlates = 0
 -- non-laggy, pixel perfect positioning (Semlar's) #############################
 local function SizerOnSizeChanged(self, x, y)
 	-- because :Hide bubbles up and triggers the OnHide script of any elements
@@ -168,7 +172,7 @@ do
 	local HealthValues = {
 		function(f) return kui.num(f.health.curr) end,
 		function(f) return kui.num(f.health.max) end,
-		function(f) return floor(f.health.percent) end,
+		function(f) return floor(f.health.percent).."%" end,
 		function(f) return "-" .. (kui.num(f.health.max - f.health.curr)) end,
 		function(f) return "" end
 	}
@@ -232,6 +236,21 @@ local function OnFrameShow(self)
 	local f = self.kui
 	local trivial = f:IsTrivial()
 
+	numPlates = numPlates + 1
+
+
+
+	for i = 1, numPlates do
+        if kuiPlates[i] == nil then
+			f.index = i
+			f.unit = "nameplate"..tostring(i)
+	addon:UpdateOccupation(f, f.unit)
+	print(f.unit)
+            kuiPlates[i] = f.unit  -- Insert at the first free index
+			addon:UpdatePortrait(frame, f, f.unit)
+        end
+    end
+
 	---------------------------------------------- Trivial sizing/positioning --
 	if addon.uiscale then
 		-- change our parent frame size if we're using fixaa..
@@ -249,23 +268,33 @@ local function OnFrameShow(self)
 		addon:UpdateLevel(f, trivial)
 		addon:UpdateName(f, trivial)
 		addon:UpdateTargetGlow(f, trivial)
+		--addon:UpdatePowerBar(f, trivial)
 
 		f.doneFirstShow = true
 	end
 
 	-- classifications
 	if not trivial and f.level.enabled then
+		local state
 		if f.boss:IsVisible() then
-			f.level:SetText("Boss")
-			f.level:SetTextColor(1, 0.2, 0.2)
-
+			state = "boss"
+			--f.level:SetText("Boss")
+			--f.level:SetTextColor(1, 0.2, 0.2)
+			addon:UpdateElite(self, f, state)
 			f.boss:Hide()
 		elseif f.state:IsVisible() then
 			if f.state:GetTexture() == "Interface\\Tooltips\\EliteNameplateIcon" then
-				f.level:SetText(f.level:GetText() .. "+")
+				state = "elite"
+				--f.level:SetText(f.level:GetText() .. "+")
+				addon:UpdateElite(self, f, state)
 			else
-				f.level:SetText(f.level:GetText() .. "r")
+				state = "rare"
+				--f.level:SetText(f.level:GetText() .. "r")
+				addon:UpdateElite(self, f, state)
 			end
+		else
+			state = "normal"
+			addon:UpdateElite(self, f, state)
 
 			f.state:Hide()
 		end
@@ -299,8 +328,14 @@ local function OnFrameHide(self)
 
 	f:SetFrameLevel(0)
 
+	numPlates = numPlates - 1
+
+	f.occupation:SetText(nil)
+
 	if f.targetGlow then
 		f.targetGlow:Hide()
+		f.targetGlowLevel:Hide()
+		f.targetGlowPortrait:Hide()
 	end
 
 	addon:ClearGUID(f)
@@ -400,6 +435,13 @@ end
 
 -- stuff that can be updated less often
 local function UpdateFrame(self)
+
+	local unit = self.unit
+	if self.health:IsShown() then
+		addon:UpdatePortrait(frame, self, unit)
+	end
+
+	---end
 	-- periodically update the name in order to purge Unknowns due to lag, etc
 	self:SetName()
 
@@ -426,10 +468,15 @@ local function UpdateFrame(self)
 		-- return guid to an assumed unique name
 		addon:GetGUID(self)
 	end
+
 end
 
 -- stuff that needs to be updated often
 local function UpdateFrameCritical(self)
+
+	if self.health:IsShown() == nil then
+		addon:UpdateOccupation(self, self.unit)
+	end
 	------------------------------------------------------------------ Threat --
 	if self.glow:IsVisible() then
 		-- check the default glow colour every frame while it is visible
@@ -487,6 +534,8 @@ local function UpdateFrameCritical(self)
 
 				if self.targetGlow then
 					self.targetGlow:Show()
+					self.targetGlowLevel:Show()
+					self.targetGlowPortrait:Show()
 					self:SetGlowColour(unpack(profile.general.targetglowcolour))
 				end
 
@@ -511,6 +560,8 @@ local function UpdateFrameCritical(self)
 
 			if self.targetGlow then
 				self.targetGlow:Hide()
+				self.targetGlowLevel:Hide()
+				self.targetGlowPortrait:Hide()
 				self:SetGlowColour()
 			end
 
@@ -594,6 +645,8 @@ function addon:InitFrame(frame)
 	f.shield = shieldedRegion
 	f.oldHealth = healthBar
 	f.oldCastbar = castBar
+	f.index = 0
+	f.unit = "nameplate"..f.index
 
 	f.oldName = nameTextRegion
 	f.oldName:Hide()
@@ -634,7 +687,11 @@ function addon:InitFrame(frame)
 
 	self:CreateBackground(frame, f)
 	self:CreateHealthBar(frame, f)
-
+	self:CreateHealthBarBorder(frame, f)
+--[[ 	self.CreatePowerBar(frame, f)
+	self.CreatePowerBarBorder(frame, f) ]]
+	self:CreateLevelBorder(frame, f)
+	
 	-- overlay - frame level above health bar, used for text -------------------
 	f.overlay = CreateFrame("Frame", nil, f)
 	f.overlay:SetAllPoints(f.health)
@@ -645,6 +702,9 @@ function addon:InitFrame(frame)
 
 	self:CreateLevel(frame, f)
 	self:CreateName(frame, f)
+	self:CreatePortrait(frame, f)
+	self:CreateElite(frame, f)
+	self:CreateOccupation(frame, f, f.unit)
 
 	-- castbar #################################################################
 	if self.Castbar and self.Castbar.db.profile.enabled then
@@ -654,6 +714,8 @@ function addon:InitFrame(frame)
 	-- target highlight --------------------------------------------------------
 	if profile.general.targetglow then
 		self:CreateTargetGlow(f)
+--[[ 		self:CreateTargetGlowLevel(f)
+		self:CreateTargetGlowPortrait(f) ]]
 	end
 
 	-- raid icon ---------------------------------------------------------------

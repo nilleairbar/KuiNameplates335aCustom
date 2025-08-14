@@ -87,8 +87,8 @@ local function UpdateButtonSize(self, button)
 		button.time:SetFontSize("small")
 		button.count:SetFontSize("small")
 	else
-		button.time:SetFontSize("name")
-		button.count:SetFontSize("name")
+		button.time:SetFontSize("health")
+		button.count:SetFontSize("health")
 	end
 end
 local function UpdateContainerSize(frame)
@@ -98,7 +98,7 @@ local function UpdateContainerSize(frame)
 	frame.auras.num_per_column = frame.trivial and trivial_num_per_column or num_per_column
 
 	frame.auras:SetWidth(frame.trivial and sizes.trivial_container_width or sizes.container_width)
-	frame.auras:SetPoint("BOTTOMLEFT", frame.health, "TOPLEFT", -1 + (frame.trivial and sizes.trivial_container_offset or sizes.container_offset), v_offset)
+	frame.auras:SetPoint("BOTTOM", frame.health, "TOP", -1 + (frame.trivial and sizes.trivial_container_offset or sizes.container_offset), v_offset + 10)
 end
 local function UpdateAllButtons(frame)
 	-- Update the container and button sizes
@@ -119,13 +119,12 @@ local stored_spells = {}
 local function ArrangeButtons(self)
 	local pv, pc
 	self.visible = 0
-
+	local offset1, offset2
 	for k, b in ipairs(self.buttons) do
 		if b:IsShown() then
 			self.visible = self.visible + 1
 
 			b:ClearAllPoints()
-
 			if pv then
 				if (self.visible - 1) % self.num_per_column == 0 then
 					-- start of row
@@ -133,15 +132,17 @@ local function ArrangeButtons(self)
 					pc = b
 				else
 					-- subsequent button in a row
-					b:SetPoint("LEFT", pv, "RIGHT", 1, 0)
+					offset1:SetPoint("BOTTOM", -20, 0)
+					b:SetPoint("LEFT", pv, "RIGHT", 2, 0)
 				end
 			else
 				-- first button
-				b:SetPoint("BOTTOMLEFT")
+				b:SetPoint("BOTTOM", -12, 0)
 				pc = b
 			end
 
 			pv = b
+			offset1 = b
 		end
 	end
 
@@ -227,7 +228,7 @@ local function OnAuraUpdate(self, elapsed)
 			if timeLeft <= 5 then
 				-- red text
 				self.time:SetTextColor(1, 0, 0)
-			elseif timeLeft <= 20 then
+			elseif timeLeft <= 60 then
 				-- yellow text
 				self.time:SetTextColor(1, 1, 0)
 			else
@@ -339,8 +340,8 @@ local function GetAuraButton(self, spellid, icon, count, duration, expirationTim
 		button.icon = button:CreateTexture(nil, "ARTWORK")
 
 		button.time = self.frame:CreateFontString(button)
-		button.time:SetJustifyH("LEFT")
-		button.time:SetPoint("TOPLEFT", -1, 1)
+		button.time:SetJustifyH("CENTER")
+		button.time:SetPoint("CENTER", 0, 0)
 		button.time:Hide()
 
 		button.count = self.frame:CreateFontString(button)
@@ -353,6 +354,12 @@ local function GetAuraButton(self, spellid, icon, count, duration, expirationTim
 
 		button.icon:SetPoint("TOPLEFT", 1, -1)
 		button.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+
+		button.border = button:CreateTexture(nil, "OVERLAY")
+		button.border:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\auras\\border")
+		button.border:SetPoint("CENTER", 0, -1)
+		button.border:SetSize(64,32)
+		button.border:SetVertexColor(0.75, 0.6, 0, 1)
 
 		tinsert(self.buttons, button)
 

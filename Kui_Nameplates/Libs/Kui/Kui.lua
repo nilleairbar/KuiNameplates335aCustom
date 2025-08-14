@@ -29,6 +29,71 @@ kui.m = {
         francois = media..'f\\francois.ttf',
     },
 }
+
+--------------------------------------------------------------- media / files --
+local cpp_media = "Interface\\AddOns\\ClassicPlatesPlus\\media\\"
+kui.cpp = {
+    auras = {
+        aurasShadow   = cpp_media..'auras\\aurasShadow',
+        border   = cpp_media..'auras\\border',
+        borderStacks   = cpp_media..'auras\\borderStacks',
+        importantBorder   = cpp_media..'auras\\importantBorder',
+        importantBorder2   = cpp_media..'auras\\importantBorder2',
+        importantBorderStacks   = cpp_media..'auras\\importantBorderStacks',
+        importantBorderStacks2   = cpp_media..'auras\\importantBorderStacks2',
+        importantHighlight   = cpp_media..'auras\\importantHighlight',
+        importantHighlight2   = cpp_media..'auras\\importantHighlight2',
+        importantHighlightStacks   = cpp_media..'auras\\importantHighlightStacks',
+        mask    = cpp_media..'auras\\mask',
+    },
+    borders = {
+        borderOwn   = cpp_media..'borders\\borderOwn',
+        borderOwnDruid  = cpp_media..'borders\\borderOwnDruid',
+        colorPicker = cpp_media..'borders\\colorPicker',
+        healthbar   = cpp_media..'borders\\healthbar',
+        level   = cpp_media..'borders\\level',
+        personal    = cpp_media..'borders\\personal',
+        personalExtra   = cpp_media..'borders\\personalExtra',
+        portrait    = cpp_media..'borders\\portrait',
+        powerbar    = cpp_media..'borders\\powerbar',
+        threat  = cpp_media..'borders\\threat',
+        threatBG    = cpp_media..'borders\\threatBG',
+        threatBG_new = cpp_media..'borders\\threatBG_new',
+        threat_new  = cpp_media..'borders\\threat_new'
+    },
+    castbar = {
+        castbar = cpp_media..'castbar\\castbar',
+        castbarMask = cpp_media..'castbar\\castbarMask',
+        castbarUI   = cpp_media..'castbar\\castbarUI',
+        castbarUI2  = cpp_media..'castbar\\castbarUI2',
+    },
+    classes = {
+    },
+    classifications = {
+        compactelite = cpp_media..'classifications\\compactelite',
+        compactrare = cpp_media..'classifications\\compactrare',
+        compactrareelite    = cpp_media..'classifications\\compacteliterare',
+        compactworldboss    = cpp_media..'classifications\\compactworldboss',
+        elite   = cpp_media..'classifications\\elite',
+        rare    = cpp_media..'classifications\\rare',
+        rareelite   = cpp_media..'classifications\\rareelite',
+        worldboss   = cpp_media..'classifications\\worldboss',
+    },
+    highlights = {
+        aurasList = cpp_media..'highlights\\aurasList',
+        healPredict = cpp_media..'highlights\\healPredicts',
+        healthbar   = cpp_media..'highlights\\healthbar',
+        healthbar_2 = cpp_media..'highlights\\healthar_2',
+        healthbar_3 = cpp_media..'highlights\\healthar_3',
+        level = cpp_media..'highlights\\level',
+        portrait    = cpp_media..'hightlights\\portrait',
+        powerbar    = cpp_media..'highlights\\powerbar',
+        spark   = cpp_media..'highlights\\spark',
+        threat  = cpp_media..'highlights\\threat',
+        threat_new  = cpp_media..'highlights\\threat_new'
+    },
+}
+
 ------------------------------------------------------------------ var tables --
 local ct = { -- classification table
     elite     = { '+',  'elite'      },

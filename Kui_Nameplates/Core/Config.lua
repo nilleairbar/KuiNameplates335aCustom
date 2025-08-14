@@ -34,7 +34,7 @@ do
 		TOPLEFT = L["Top Left"],
 		TOPRIGHT = L["Top Right"],
 		BOTTOMLEFT = L["Bottom Left"],
-		BOTTOMRIGHT = L["Bottom Right"]
+		BOTTOMRIGHT = L["Bottom Right"],
 	}
 
 	local SimpleAnchorSelectList = {

@@ -30,7 +30,7 @@ addon.sizes = {
 		bgOffset = 8 -- inset of the frame glow
 	},
 	tex = {
-		targetGlowH = 7,
+		targetGlowH = 40,
 		targetArrow = 33
 	},
 	font = {}
@@ -40,7 +40,7 @@ addon.sizes = {
 addon.defaultFontSizes = {
 	large = 12,
 	spellname = 11,
-	name = 11,
+	name = 13,
 	level = 11,
 	health = 11,
 	small = 9
@@ -66,7 +66,7 @@ local defaults = {
 			combataction_hostile = 1,
 			combataction_friendly = 1,
 			highlight = true, -- highlight plates on mouse-over
-			highlight_target = false,
+			highlight_target = true,
 			fixaa = true, -- attempt to make plates appear sharper
 			compatibility = false,
 			bartexture = DEFAULT_BAR,
@@ -97,16 +97,16 @@ local defaults = {
 			}
 		},
 		text = {
-			level = false, -- display levels
+			level = true, -- display levels
 			nameanchorpoint = "TOP",
 			nameoffsetx = 0,
 			nameoffsety = 0,
-			levelanchorpoint = "BOTTOMLEFT",
+			levelanchorpoint = "RIGHT",
 			leveloffsetx = 0,
-			leveloffsety = 2.5,
-			healthanchorpoint = "BOTTOMRIGHT",
+			leveloffsety = 0,
+			healthanchorpoint = "LEFT",
 			healthoffsetx = 0,
-			healthoffsety = 2.5
+			healthoffsety = 0,
 		},
 		hp = {
 			reactioncolours = {
@@ -265,9 +265,9 @@ do
 		if not unit then
 			return
 		end
-		if not UnitIsPlayer(unit) then
+--[[ 		if not UnitIsPlayer(unit) then
 			return
-		end
+		end ]]
 
 		local guid = UnitGUID(unit)
 		if not guid then
@@ -480,8 +480,8 @@ function addon:UpdateSizesTable()
 	addon.sizes.tex.levelOffsetY = addon.db.profile.text.leveloffsety
 	addon.sizes.tex.nameOffsetX = addon.db.profile.text.nameoffsetx
 	addon.sizes.tex.nameOffsetY = addon.db.profile.text.nameoffsety
-	addon.sizes.tex.targetGlowW = addon.sizes.frame.width - 5
-	addon.sizes.tex.ttargetGlowW = addon.sizes.frame.twidth - 5
+	addon.sizes.tex.targetGlowW = addon.sizes.frame.width * 1.1
+	addon.sizes.tex.ttargetGlowW = addon.sizes.frame.twidth
 end
 ------------------------------------------- Listen for LibSharedMedia changes --
 function addon:LSMMediaRegistered(msg, mediatype, key)

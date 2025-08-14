@@ -59,6 +59,9 @@ local function SwitchOn(f)
 	f.name:SetParent(f)
 	f.name:SetJustifyH("CENTER")
 
+	f.occupation:SetParent(f)
+	f.occupation:SetJustifyH("CENTER")
+
 	UpdateDisplay(f)
 
 	f.icon:SetParent(f)
@@ -71,6 +74,9 @@ local function SwitchOn(f)
 	end
 
 	f.health:Hide()
+	f.healthbarBorder:Hide()
+	f.levelBorder:Hide()
+	f.portrait2:Hide()
 	f.overlay:Hide()
 	f.bg:Hide()
 end
@@ -93,8 +99,12 @@ local function SwitchOff(f)
 	f.name:SetParent(f.overlay)
 
 	f.health:Show()
+	f.healthbarBorder:Show()
+	f.levelBorder:Show()
+	f.portrait2:Show()
 	f.overlay:Show()
 	f.bg:Show()
+	f.occupation:Hide()
 
 	-- reposition name
 	addon:UpdateName(f, f.trivial)
@@ -301,7 +311,7 @@ function mod:OnInitialize()
 			fontsizetrivial = 9
 		},
 		colours = {
-			friendly = {.6, 1, 0.6}
+			friendly = {.2, 0.6, 0.1}
 		}
 	}})
 

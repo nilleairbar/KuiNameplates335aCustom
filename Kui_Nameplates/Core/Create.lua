@@ -15,6 +15,30 @@ local side_coords = {
 	bottom = {.05, .95, .76, 1}
 }
 
+local function ScanUnitTooltip2ndLine(unit)
+    GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")  -- Set the tooltip owner
+    GameTooltip:SetUnit(unit)                       -- Set the tooltip to the specified unit
+    GameTooltip:Show()          
+	local output1, output2                    -- Show the tooltip
+    -- Check if the second line exists
+    local secondLineText = _G["GameTooltipTextLeft2"]:GetText()
+	if secondLineText then
+		if not string.match(secondLineText, "Level") then  -- Get the second line text
+			output1 = secondLineText
+		end						-- Output the second line text to the chat
+    end                       -- Output the tooltip text to the chat
+    
+	local firstLineText = _G["GameTooltipTextLeft1"]:GetText()
+
+	if firstLineText then
+		output2 = firstLineText
+    end        
+	
+	GameTooltip:Hide()                              -- Hide the tooltip after scanning
+
+	return output1, output2
+end
+
 ------------------------------------------------------------------ Background --
 function addon:CreateBackground(frame, f)
 	-- frame glow
@@ -101,6 +125,20 @@ function addon:CreateHealthBar(frame, f)
 		self.CutawayBar(f.health)
 	end
 end
+
+function addon:CreateHealthBarBorder(frame, f)
+	f.healthbarBorder = CreateFrame("Frame", nil, f)
+	f.healthbarBorder:SetPoint("CENTER", f.health, 0, 0)
+	f.healthbarBorder:SetSize(160, 20)
+
+	f.healthbarBorder.tex = f.healthbarBorder:CreateTexture()
+	f.healthbarBorder.tex:SetDrawLayer("OVERLAY")
+	f.healthbarBorder.tex:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\borders\\healthbar")
+	f.healthbarBorder.tex:SetAllPoints()
+	f.healthbarBorder.tex:SetSize(160, 20)
+	f.healthbarBorder.tex:SetVertexColor(0.75, 0.6, 0, 1)
+end
+
 function addon:UpdateHealthBar(f, trivial)
 	f.health:ClearAllPoints()
 
@@ -112,6 +150,47 @@ function addon:UpdateHealthBar(f, trivial)
 
 	f.health:SetPoint("BOTTOMLEFT", f.x + 1, f.y + 1)
 end
+------------------------------------------------------------------- PowerBar --
+--[[ function addon:CreatePowerBar(frame, f)
+	f.powerbar = CreateFrame("StatusBar", nil, f)
+	f.powerbar:SetFrameLevel(1)
+	f.powerbar:SetStatusBarTexture(addon.bartexture)
+
+	f.powerbar:GetStatusBarTexture():SetDrawLayer("ARTWORK", -8)
+
+	if self.SetValueSmooth then
+		f.powerbar.OrigSetValue = f.powerbar.SetValue
+		f.powerbar.SetValue = self.SetValueSmooth
+	elseif self.CutawayBar then
+		self.CutawayBar(f.powerbar)
+	end
+end
+
+function addon:CreatePowerBarBorder(frame, f)
+	f.powerbarBorder = CreateFrame("Frame", nil, I)
+	f.powerbarBorder:SetPoint("CENTER", f.healthbarBorder, 0, -20)
+	f.powerbarBorder:SetSize(160, 20)
+
+	f.powerbarBorder.tex = f.powerbarBorder:CreateTexture()
+	f.powerbarBorder.tex:SetDrawLayer("OVERLAY")
+	f.powerbarBorder.tex:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\borders\\powerbar")
+	f.powerbarBorder.tex:SetAllPoints()
+	f.powerbarBorder.tex:SetSize(160, 20)
+	f.powerbarBorder.tex:SetVertexColor(0.75, 0.6, 0, 1)
+end ]]
+
+function addon:UpdatePowerBar(f, trivial)
+	f.power:ClearAllPoints()
+
+	if trivial then
+		f.power:SetSize(self.sizes.frame.twidth / 2 - 2, self.sizes.frame.theight / 2 - 2)
+	elseif not trivial then
+		f.power:SetSize(self.sizes.frame.width / 2 - 2, self.sizes.frame.height / 2 - 2)
+	end
+
+	f.power:SetPoint("BOTTOMLEFT", f.x + 1, f.y + 1)
+end
+
 ------------------------------------------------------------------- Highlight --
 function addon:CreateHighlight(frame, f)
 	if not self.db.profile.general.highlight then
@@ -140,6 +219,8 @@ function addon:CreateHealthText(frame, f)
 	f.health.p:SetJustifyH("RIGHT")
 	f.health.p:SetJustifyV("MIDDLE")
 	f.health.p.osize = "health" -- original font size used to update/restore
+
+	f.health.p:SetTextColor(0.9, 0.85, 0, 1)
 
 	if self.db.profile.hp.text.mouseover then
 		f.health.p:Hide()
@@ -178,6 +259,90 @@ function addon:UpdateHealthText(f, trivial)
 	end
 end
 ------------------------------------------------------------------ Level text --
+
+function addon:CreateLevelBorder(frame, f)
+	if not f.level then
+		return
+	end
+	f.levelBorder = CreateFrame("Frame", nil, f.healthbarBorder)
+	f.levelBorder:SetPoint("RIGHT", f.healthbarBorder, 22, 0)
+	f.levelBorder:SetSize(40, 40)
+	--f.levelBorder:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+	f.levelBorder:SetBackdrop({bgFile = "Interface/TutorialFrame/TutorialFrameBackground",
+
+                                edgeFile = "",
+                                tile = false,
+                                insets = { left = 10, right = 10, top = 12, bottom = 12}})
+	f.levelBorder:SetBackdropColor(0.75, 0.6, 0, 1)
+
+	f.levelBorder.tex = f.levelBorder:CreateTexture()
+	f.levelBorder.tex:SetDrawLayer("OVERLAY")
+	f.levelBorder.tex:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\borders\\level")
+	--f.levelBorder.tex:SetPoint("RIGHT", f.healthbarBorder)
+	f.levelBorder.tex:SetAllPoints()
+	f.levelBorder.tex:SetSize(40, 40)
+	f.levelBorder.tex:SetVertexColor(f.healthbarBorder.tex:GetVertexColor())
+end
+
+function addon:CreatePortrait(frame, f)
+	f.portrait2 = CreateFrame("Frame", nil, f.healthbarBorder)
+	f.portrait2:SetPoint("LEFT", f.healthbarBorder, -22, 0)
+	f.portrait2:SetSize(40, 40)
+
+	f.portrait2.tex = f.portrait2:CreateTexture()
+	f.portrait2.tex:SetDrawLayer("ARTWORK")
+	--print(f.portrait2.tex:GetDrawLayer())
+	f.portrait2.tex:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\borders\\portrait")
+	f.portrait2.tex:SetAllPoints()
+	f.portrait2.tex:SetSize(40, 40)
+	f.portrait2.tex:SetVertexColor(f.healthbarBorder.tex:GetVertexColor())
+
+	f.portrait = CreateFrame("Frame", nil, f.healthbarBorder)
+	f.portrait:SetPoint("LEFT", f.healthbarBorder, -16, 0)
+	f.portrait:SetSize(25,25)
+
+	f.portrait.tex = f.portrait:CreateTexture()
+	f.portrait.tex:SetSize(25,25)
+	f.portrait.tex:SetAllPoints(f.portrait)
+	f.portrait.tex:SetDrawLayer("BORDER")
+end
+
+function addon:CreateElite(frame, f)
+	f.elite = CreateFrame("Frame", nil, f.healthbarBorder)
+	f.elite:SetPoint("LEFT", f.healthbarBorder, -36, -1)
+	f.elite:SetSize(60,60)
+
+	f.elite.tex = f.elite:CreateTexture()
+	f.elite.tex:SetDrawLayer("OVERLAY", 2)
+	f.elite.tex:SetAllPoints()
+	f.elite.tex:SetSize(60, 60)
+	f.elite.tex:Hide()
+end
+
+function addon:UpdateElite(frame, f, status)
+	local texture
+	if status == "boss" then
+		texture = "Interface\\AddOns\\ClassicPlatesPlus\\media\\classifications\\worldboss"
+		f.elite.tex:Show()
+	elseif status == "elite" then
+		texture = "Interface\\AddOns\\ClassicPlatesPlus\\media\\classifications\\elite"
+				f.elite.tex:Show()
+	elseif status == "rare" then
+		texture = "Interface\\AddOns\\ClassicPlatesPlus\\media\\classifications\\rare"
+		f.elite.tex:Show()
+	else 
+		texture = ""
+		f.elite.tex:Hide()
+	end
+	f.elite.tex:SetTexture(texture)
+end
+
+function addon:UpdatePortrait(frame, f, unit)
+	f.portrait.tex:Show()
+	--print("Portraits updating!")
+	SetPortraitTexture(f.portrait.tex, unit)
+end
+
 function addon:CreateLevel(frame, f)
 	if not f.level then
 		return
@@ -191,10 +356,11 @@ function addon:CreateLevel(frame, f)
 		outline = "OUTLINE"
 	})
 
-	f.level:SetParent(f.overlay)
-	f.level:SetJustifyH("LEFT")
+	f.level:SetParent(f.levelBorder)
+	f.level:SetAllPoints(f.levelBorder)
+	f.level:SetJustifyH("MIDDLE")
 	f.level:SetJustifyV("MIDDLE")
-	f.level:SetHeight(10)
+	f.level:SetHeight(13)
 	f.level:ClearAllPoints()
 	f.level.osize = "level" -- original font size used to update/restore
 
@@ -202,11 +368,14 @@ function addon:CreateLevel(frame, f)
 		f.level.enabled = true
 	end
 end
+
 function addon:UpdateLevel(f, trivial)
 	if trivial then
 		f.level:Hide()
+		f.levelBorder:Hide()
 	else
-		local anch2, anch1 = self.db.profile.text.levelanchorpoint or "BOTTOMLEFT", ""
+		--hide all the stuff for anchoring the level to anything but the border
+--[[ 		local anch2, anch1 = self.db.profile.text.levelanchorpoint or "BOTTOMLEFT", ""
 
 		if anch2:find("BOTTOM") then
 			f.level:SetJustifyV("BOTTOM")
@@ -224,10 +393,11 @@ function addon:UpdateLevel(f, trivial)
 		elseif anch2:find("RIGHT") then
 			anch1 = anch1 .. "RIGHT"
 			f.level:SetJustifyH("RIGHT")
-		end
+		end ]]
 
 		f.level:ClearAllPoints()
-		f.level:SetPoint(anch1, f.health, anch2, self.db.profile.text.leveloffsetx or 2.5, self.db.profile.text.leveloffsety or 0)
+		f.level:SetPoint("CENTER", f.levelBorder, "CENTER", 1, 1)
+
 	end
 end
 ------------------------------------------------------------------- Name text --
@@ -241,9 +411,49 @@ function addon:CreateName(frame, f)
 	f.name.osize = "name" -- original font size used to update/restore
 	f.name:SetHeight(10)
 end
+function addon:CreateOccupation(frame, f, unit)
+	f.occupation = f:CreateFontString(f.overlay, {
+	font = self.font,
+	size = "small",
+	outline = "OUTLINE"
+	})
+
+	f.occupation.osize = "small" -- original font size used to update/restore
+	f.occupation:SetHeight(10)
+
+	f.occupation:ClearAllPoints()
+	f.occupation:SetWidth(0)
+
+	f.occupation:SetPoint("TOP", f.name, "BOTTOM", 0, -4)
+	f.occupation:SetTextColor(0.75,0.75,0.75,1)
+	--addon:UpdateOccupation(f, unit)
+end
 function addon:UpdateName(f, trivial)
 	f.name:ClearAllPoints()
 	f.name:SetWidth(0)
+
+	local r, g, b = f.oldHealth:GetStatusBarColor()
+	if g > 0.9 and r == 0 and b == 0 then 
+			r, g, b = unpack(self.db.profile.hp.reactioncolours.friendlycol)
+		elseif r > 0.9 and g == 0 and b == 0 then
+			-- enemy NPC
+			f.friend = nil
+			r, g, b = unpack(self.db.profile.hp.reactioncolours.hatedcol)
+		elseif (r + g) > 1.8 and b == 0 then
+			-- neutral NPC
+			f.friend = nil
+			r, g, b = unpack(self.db.profile.hp.reactioncolours.neutralcol)
+		elseif r < 0.6 and (r + g) == (r + b) then
+			-- tapped NPC
+			-- keep previous self.friend value
+			f.tapped = true
+			r, g, b = unpack(self.db.profile.hp.reactioncolours.tappedcol)
+		else
+			-- enemy player, use default UI colour
+			f.friend = nil
+			f.player = true
+		end
+	f.name:SetVertexColor(r,g,b)
 
 	local anch2, anch1 = self.db.profile.text.nameanchorpoint or "TOP", ""
 	if anch2 == "BOTTOM" then
@@ -271,14 +481,43 @@ function addon:UpdateName(f, trivial)
 		f.name:SetWidth(addon.sizes.frame.width * 2)
 	end
 end
+
+function addon:UpdateOccupation(f, unit)
+	if f.occupation:GetText() == nil then
+		--print("Updating occupation!")
+		local occupation = ScanUnitTooltip2ndLine(unit)
+		if occupation ~= nil then
+			f.occupation:SetText('<'..occupation..'>')
+				if GetGuildInfo("player") == occupation then
+					f.occupation:SetTextColor(0.2,0.5,0.9,1)
+				end
+			f.occupation:Show()
+		end
+	end
+end
 ----------------------------------------------------------------- Target glow --
 function addon:CreateTargetGlow(f)
-	f.targetGlow = f.overlay:CreateTexture(nil, "ARTWORK")
-	f.targetGlow:SetTexture("Interface\\AddOns\\Kui_Nameplates\\Media\\target-glow")
-	f.targetGlow:SetTexCoord(0, .593, 0, .875)
-	f.targetGlow:SetPoint("TOP", f.overlay, "BOTTOM", 0, 1)
+	f.targetGlow = f.health:CreateTexture(nil, "BACKGROUND")
+	f.targetGlow:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\highlights\\healthbar")
+	--f.targetGlow:SetTexCoord(0, .593, 0, .875)
+	f.targetGlow:SetPoint("CENTER", f.health, "CENTER", 0, 0)
 	f.targetGlow:SetVertexColor(unpack(self.db.profile.general.targetglowcolour))
+	f.targetGlow:SetSize(160,40)
 	f.targetGlow:Hide()
+	f.targetGlowLevel = f.levelBorder:CreateTexture(nil, "BACKGROUND")
+	f.targetGlowLevel:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\highlights\\level")
+	--f.targetGlow:SetTexCoord(0, .593, 0, .875)
+	f.targetGlowLevel:SetPoint("CENTER", f.levelBorder, "CENTER", 0, 0)
+	f.targetGlowLevel:SetVertexColor(unpack(self.db.profile.general.targetglowcolour))
+	f.targetGlowLevel:SetSize(40,40)
+	f.targetGlowLevel:Hide()
+	f.targetGlowPortrait = f.portrait2:CreateTexture(nil, "BACKGROUND")
+	f.targetGlowPortrait:SetTexture("Interface\\AddOns\\ClassicPlatesPlus\\media\\highlights\\portrait")
+	--f.targetGlow:SetTexCoord(0, .593, 0, .875)
+	f.targetGlowPortrait:SetPoint("CENTER", f.portrait2, "CENTER", 0, 0)
+	f.targetGlowPortrait:SetVertexColor(unpack(self.db.profile.general.targetglowcolour))
+	f.targetGlowPortrait:SetSize(40,40)
+	f.targetGlowPortrait:Hide()
 end
 function addon:UpdateTargetGlow(f, trivial)
 	if not f.targetGlow then
@@ -288,18 +527,20 @@ function addon:UpdateTargetGlow(f, trivial)
 		f.targetGlow:SetSize(self.sizes.tex.ttargetGlowW, self.sizes.tex.targetGlowH)
 	else
 		f.targetGlow:SetSize(self.sizes.tex.targetGlowW, self.sizes.tex.targetGlowH)
+		f.targetGlowPortrait:SetSize(self.sizes.tex.targetGlowW * 0.25, self.sizes.tex.targetGlowH)
 	end
 end
 -- raid icon ###################################################################
 local PositionRaidIcon = {
-	function(f) return f.icon:SetPoint("RIGHT", f.overlay, "LEFT", -8, 0) end,
-	function(f) return f.icon:SetPoint("BOTTOM", f.overlay, "TOP", 0, 12) end,
-	function(f) return f.icon:SetPoint("LEFT", f.overlay, "RIGHT", 8, 0) end,
-	function(f) return f.icon:SetPoint("TOP", f.overlay, "BOTTOM", 0, -8) end
+	function(f) return f.icon:SetPoint("RIGHT", f.portrait2, "LEFT", 0, 0) end,
+	function(f) return f.icon:SetPoint("BOTTOM", f.portrait2, "TOP", 0, 0) end,
+	function(f) return f.icon:SetPoint("CENTER", f.portrait2, "CENTER", -1, 0) end,
+	function(f) return f.icon:SetPoint("TOP", f.portrait2, "BOTTOM", 0, 0) end
 }
 
 function addon:UpdateRaidIcon(f)
 	f.icon:SetParent(f.overlay)
+	f.icon:SetDrawLayer("OVERLAY")
 	f.icon:SetSize(addon.sizes.tex.raidicon, addon.sizes.tex.raidicon)
 
 	f.icon:ClearAllPoints()

@@ -39,10 +39,10 @@ addon.sizes = {
 -- as these are scaled with the user option we need to store the default
 addon.defaultFontSizes = {
 	large = 12,
-	spellname = 11,
-	name = 13,
-	level = 11,
-	health = 11,
+	spellname = 12,
+	name = 12,
+	level = 12,
+	health = 12,
 	small = 9
 }
 
@@ -71,11 +71,11 @@ local defaults = {
 			compatibility = false,
 			bartexture = DEFAULT_BAR,
 			targetglow = true,
-			targetglowcolour = {.3, 0.7, 1, 1},
+			targetglowcolour = {.75, 0.6, 0, 0.5},
 			targetarrows = false,
 			hheight = 13,
 			thheight = 9,
-			width = 130,
+			width = 145,
 			twidth = 72,
 			glowshadow = true,
 			strata = "BACKGROUND",
@@ -100,7 +100,7 @@ local defaults = {
 			level = true, -- display levels
 			nameanchorpoint = "TOP",
 			nameoffsetx = 0,
-			nameoffsety = 0,
+			nameoffsety = -7,
 			levelanchorpoint = "RIGHT",
 			leveloffsetx = 0,
 			leveloffsety = 0,
@@ -138,11 +138,12 @@ local defaults = {
 				noalpha = false
 			},
 			sizes = {
-				large = 12,
-				spellname = 11,
-				name = 11,
-				level = 11,
-				health = 11,
+				large = 14,
+				spellname = 12,
+				name = 12,
+				level = 12,
+				health = 12,
+				health_small = 10,
 				small = 9
 			}
 		}
@@ -265,9 +266,9 @@ do
 		if not unit then
 			return
 		end
---[[ 		if not UnitIsPlayer(unit) then
+		if not UnitIsPlayer(unit) then
 			return
-		end ]]
+		end
 
 		local guid = UnitGUID(unit)
 		if not guid then
@@ -293,7 +294,7 @@ do
 		end
 	end
 	
-	--self:RegisterEvent("NAME_PLATE_CREATED")
+--[[ 	--self:RegisterEvent("NAME_PLATE_CREATED")
 	--self:RegisterEvent("NAME_PLATE_OWNER_CHANGED")
 	--self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 	--self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
@@ -327,7 +328,7 @@ do
 			addon:InitFrame(plate)
 			tinsert(addon.frameList, plate)
 		end
-	end
+	end ]]
 	function addon:UPDATE_MOUSEOVER_UNIT(event)
 		StoreUnit("mouseover")
 		if UnitExists("mouseovertarget") then
@@ -501,19 +502,19 @@ end
 do
 	local WorldFrame, tinsert, select = WorldFrame, tinsert, select
 	function addon:OnUpdate()
-	--	-- find new nameplates
-	--	local frames = select("#", WorldFrame:GetChildren())
-	--	if frames ~= self.numFrames then
-	--		local f
-	--		for i = 1, frames do
-	--			f = select(i, WorldFrame:GetChildren())
-	--			if self:IsNameplate(f) and not f.kui then
-	--				self:InitFrame(f)
-	--				tinsert(self.frameList, f)
-	--			end
-	--		end
-	--		self.numFrames = frames
-	--	end
+		-- find new nameplates
+		local frames = select("#", WorldFrame:GetChildren())
+		if frames ~= self.numFrames then
+			local f
+			for i = 1, frames do
+				f = select(i, WorldFrame:GetChildren())
+				if self:IsNameplate(f) and not f.kui then
+					self:InitFrame(f)
+					tinsert(self.frameList, f)
+				end
+			end
+			self.numFrames = frames
+		end
 		-- process group update queue
 		if group_update then
 			group_update_elapsed = group_update_elapsed + .1
@@ -651,10 +652,10 @@ function addon:OnEnable()
 	self:RegisterEvent("PARTY_MEMBERS_CHANGED", "QueueGroupUpdate")
 	self:RegisterEvent("RAID_ROSTER_UPDATE", "QueueGroupUpdate")
 
-	self:RegisterEvent("NAME_PLATE_CREATED")
+--[[ 	self:RegisterEvent("NAME_PLATE_CREATED")
 	self:RegisterEvent("NAME_PLATE_OWNER_CHANGED")
 	self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-	self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+	self:RegisterEvent("NAME_PLATE_UNIT_ADDED") ]]
 
 	self:ScheduleRepeatingTimer("OnUpdate", 0.1)
 end

@@ -244,7 +244,6 @@ local function OnAuraUpdate(self, elapsed)
 			-- used when a non-targeted mob's auras timer gets below 0
 			-- but the combat log hasn't reported that it has faded yet.
 			self.time:Hide()
-			self:Hide()
 			self:SetScript("OnUpdate", nil)
 			StopPulsatingAura(self)
 			return
@@ -468,19 +467,57 @@ function mod:Hide(msg, frame)
 end
 -------------------------------------------------------------- event handlers --
 function mod:COMBAT_LOG_EVENT_UNFILTERED(_, castTime, event, guid, name, _, destGUID, destName, _, spellid, spellname)
+	-- used to hide expired auras on previously known frames
+	-- to detect aura updates on the mouseover, if it exists
+	-- (since UNIT_AURA doesn't fire for mouseover)
+	-- and place auras on frames for which GUIDs are known, if possible
 	if not guid and guid ~= PLAYER_GUID then
 		return
 	end
 
-	local token = C_NamePlate.GetNamePlateTokenByGUID(destGUID);
-
-	if not token then
-		return false
-	end
-
 	if REMOVAL_EVENTS[event] or (db_behav.showSecondary and ADDITION_EVENTS[event]) then
-		mod:UNIT_AURA(event, token)
-		return true
+		-- events on the current target will be caught by UNIT_AURA
+		-- some other units will fire twice too, but this catches the majority
+		if destGUID == UnitGUID("target") then
+			return
+		end
+
+		if destGUID == UnitGUID("mouseover") then
+			-- event on the mouseover unit - update directly
+			self:UNIT_AURA("UNIT_AURA", "mouseover")
+			return
+		end
+
+		-- only listen for simple removals/additions from now
+		-- fetch the subject's nameplate
+		local f = addon:GetNameplate(destGUID, destName)
+		if not f or not f.auras then
+			return
+		end
+		if (f.trivial and not self.db.profile.showtrivial) or f.friend then
+			return
+		end
+
+		if not (spellid or spellname) then
+			return
+		end
+
+		if REMOVAL_EVENTS[event] then
+			-- hide an aura button when the combat log reports it has expired
+			local btn = f.auras.spellids[spellid] or f.auras.spellids[namedlist[spellname]]
+			if btn then
+				btn:Hide()
+			end
+		elseif ADDITION_EVENTS[event] then
+			local btn = f.auras.spellids[spellid] or f.auras.spellids[namedlist[spellname]]
+			if btn then
+				-- reset timer to original duration
+				UpdateButtonDuration(btn, stored_spells[spellid])
+			else
+				-- show a placeholder button with no timer when possible
+				f.auras:DisplayAura(spellid, spellname, select(3, GetSpellInfo(spellid)), 1)
+			end
+		end
 	end
 end
 function mod:PostTarget(msg, frame, is_target)
@@ -494,61 +531,27 @@ end
 function mod:GUIDStored(msg, f, unit)
 	self:UNIT_AURA("UNIT_AURA", unit, f)
 end
-function mod:NAME_PLATE_OWNER_CHANGED(event, unit)
-	mod:NAME_PLATE_UNIT_REMOVED(event, unit)
-	mod:NAME_PLATE_UNIT_ADDED(event, unit)
-end
-function mod:NAME_PLATE_UNIT_REMOVED(event, unit)
-	local plate = C_NamePlate.GetNamePlateForUnit(unit)
-	if not plate then
-		return false
-	end
-	if plate then
-		mod:UNIT_AURA(event, unit, plate.kui)
-		plate = nil
-	end
-end
-function mod:NAME_PLATE_UNIT_ADDED(event, unit)
-	local plate = C_NamePlate.GetNamePlateForUnit(unit)
-	if not plate then
-		return false
-	end
-	if plate.kui then
-		mod:UNIT_AURA(event, unit, plate.kui)
-	end
-end
 function mod:UNIT_AURA(event, unit, frame)
+	-- select the unit's nameplate
+	--unit = 'target' -- DEBUG
 	frame = frame or addon:GetNameplate(UnitGUID(unit))
-	if not frame then
-		local plate = C_NamePlate.GetNamePlateForUnit(unit)
-		if plate then
-			if plate.kui then
-				frame = plate.kui
-			end
-		end
-	end
-
 	if not frame or not frame.auras then
 		return
 	end
-
 	if frame.trivial and not self.db.profile.showtrivial then
 		return
 	end
 
-	local filter = ""
-	if onlyMyAuras then
-		filter = "PLAYER|"
-	end
+	local filter = "PLAYER"
 	if UnitIsFriend(unit, "player") then
-		filter = filter .. "HELPFUL"
+		filter = filter .. "|HELPFUL"
 	else
-		filter = filter .. "HARMFUL"
+		filter = filter .. "|HARMFUL"
 	end
-
 
 	for i = 1, 40 do
 		local name, _, icon, count, _, duration, expirationTime, _, _, _, spellid = UnitAura(unit, i, filter)
+
 		if spellid then
 			frame.auras:DisplayAura(spellid, name, icon, count, duration, expirationTime)
 		else
@@ -564,7 +567,6 @@ function mod:UNIT_AURA(event, unit, frame)
 
 		button.used = nil
 	end
-	frame.auras:ArrangeButtons()
 end
 function mod:PLAYER_ENTERING_WORLD(event)
 	PLAYER_GUID = PLAYER_GUID or UnitGUID("player")
@@ -600,19 +602,10 @@ function mod:GetOptions()
 	return {
 		enabled = {
 			type = "toggle",
-			name = L["Show auras"],
-			desc = L["Display auras on the current target's nameplate"],
+			name = L["Show my auras"],
+			desc = L["Display auras cast by you on the current target's nameplate"],
 			order = 1,
 			disabled = false
-		},
-		onlyMyAuras = {
-			type = "toggle",
-			name = L["Show only my auras"],
-			desc = L["Display only auras cast by you on the current target's nameplate, can get broken if target disappears etc as that aura wont belong to you as tracking will be stopped"],
-			order = 2,
-			disabled = function()
-				return not self.db.profile.enabled
-			end
 		},
 		showtrivial = {
 			type = "toggle",
@@ -801,10 +794,10 @@ function mod:OnEnable()
 	self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 
-	self:RegisterEvent("NAME_PLATE_OWNER_CHANGED")
+--[[ 	self:RegisterEvent("NAME_PLATE_OWNER_CHANGED")
 	self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 	self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-
+ ]]
 
 	-- get guid immediately if enabled while in game
 	self:PLAYER_ENTERING_WORLD()
@@ -824,10 +817,6 @@ function mod:OnDisable()
 	self:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
 	self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-
-	self:UnregisterEvent("NAME_PLATE_OWNER_CHANGED")
-	self:UnregisterEvent("NAME_PLATE_UNIT_REMOVED")
-	self:UnregisterEvent("NAME_PLATE_UNIT_ADDED")
 
 	for _, frame in pairs(addon.frameList) do
 		self:Hide(nil, frame.kui)

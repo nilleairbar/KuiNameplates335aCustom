@@ -238,19 +238,16 @@ local function OnFrameShow(self)
 
 	numPlates = numPlates + 1
 
-
-
 	for i = 1, numPlates do
         if kuiPlates[i] == nil then
 			f.index = i
 			f.unit = "nameplate"..tostring(i)
-	addon:UpdateOccupation(f, f.unit)
-	print(f.unit)
+			--addon:UpdateOccupation(f, f.unit)
+			--print(f.unit)
             kuiPlates[i] = f.unit  -- Insert at the first free index
 			addon:UpdatePortrait(frame, f, f.unit)
         end
     end
-
 	---------------------------------------------- Trivial sizing/positioning --
 	if addon.uiscale then
 		-- change our parent frame size if we're using fixaa..
@@ -295,7 +292,6 @@ local function OnFrameShow(self)
 		else
 			state = "normal"
 			addon:UpdateElite(self, f, state)
-
 			f.state:Hide()
 		end
 
@@ -441,6 +437,12 @@ local function UpdateFrame(self)
 		addon:UpdatePortrait(frame, self, unit)
 	end
 
+	--local unit = self.unit
+
+	--if self.health:IsShown() == nil then
+		addon:UpdateOccupation(self, unit)
+	--end
+
 	---end
 	-- periodically update the name in order to purge Unknowns due to lag, etc
 	self:SetName()
@@ -468,15 +470,10 @@ local function UpdateFrame(self)
 		-- return guid to an assumed unique name
 		addon:GetGUID(self)
 	end
-
 end
 
 -- stuff that needs to be updated often
 local function UpdateFrameCritical(self)
-
-	if self.health:IsShown() == nil then
-		addon:UpdateOccupation(self, self.unit)
-	end
 	------------------------------------------------------------------ Threat --
 	if self.glow:IsVisible() then
 		-- check the default glow colour every frame while it is visible

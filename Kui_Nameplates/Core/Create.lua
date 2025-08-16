@@ -16,27 +16,31 @@ local side_coords = {
 }
 
 local function ScanUnitTooltip2ndLine(unit)
-    GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")  -- Set the tooltip owner
-    GameTooltip:SetUnit(unit)                       -- Set the tooltip to the specified unit
-    GameTooltip:Show()          
-	local output1, output2                    -- Show the tooltip
+	CreateFrame("GameTooltip", "ScanningGameTooltip", nil, "GameTooltipTemplate")
+    ScanningGameTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")  
+	ScanningGameTooltip:ClearLines()
+	ScanningGameTooltip:SetUnit(unit)                       -- Set the tooltip to the specified unit
+    ScanningGameTooltip:Show()
+
+    local i=1
+    while _G["ScanningGameTooltipTextLeft" .. i] do
+        local text = _G["ScanningGameTooltipTextLeft" .. i]:GetText()
+        if text and text ~= "" then print(text) end
+        i = i + 1
+    end
+
+--[[ 	local output1			                    -- Show the tooltip
     -- Check if the second line exists
-    local secondLineText = _G["GameTooltipTextLeft2"]:GetText()
-	if secondLineText then
+    local secondLineText = _G["ScanningGameTooltipTextLeft2"]:GetText()
+	if secondLineText and text ~= "" then
 		if not string.match(secondLineText, "Level") then  -- Get the second line text
 			output1 = secondLineText
 		end						-- Output the second line text to the chat
     end                       -- Output the tooltip text to the chat
-    
-	local firstLineText = _G["GameTooltipTextLeft1"]:GetText()
-
-	if firstLineText then
-		output2 = firstLineText
-    end        
-	
+ ]]
 	GameTooltip:Hide()                              -- Hide the tooltip after scanning
 
-	return output1, output2
+	return output1
 end
 
 ------------------------------------------------------------------ Background --
@@ -268,12 +272,12 @@ function addon:CreateLevelBorder(frame, f)
 	f.levelBorder:SetPoint("RIGHT", f.healthbarBorder, 22, 0)
 	f.levelBorder:SetSize(40, 40)
 	--f.levelBorder:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-	f.levelBorder:SetBackdrop({bgFile = "Interface/TutorialFrame/TutorialFrameBackground",
+	f.levelBorder:SetBackdrop({bgFile = kui.m.t.solid,
 
                                 edgeFile = "",
                                 tile = false,
                                 insets = { left = 10, right = 10, top = 12, bottom = 12}})
-	f.levelBorder:SetBackdropColor(0.75, 0.6, 0, 1)
+	f.levelBorder:SetBackdropColor(0.25, 0.1, 0, 1)
 
 	f.levelBorder.tex = f.levelBorder:CreateTexture()
 	f.levelBorder.tex:SetDrawLayer("OVERLAY")
@@ -297,14 +301,18 @@ function addon:CreatePortrait(frame, f)
 	f.portrait2.tex:SetSize(40, 40)
 	f.portrait2.tex:SetVertexColor(f.healthbarBorder.tex:GetVertexColor())
 
-	f.portrait = CreateFrame("Frame", nil, f.healthbarBorder)
-	f.portrait:SetPoint("LEFT", f.healthbarBorder, -16, 0)
-	f.portrait:SetSize(25,25)
+	f.portrait = CreateFrame("Frame", nil, f.portrait2)
+	f.portrait:SetPoint("CENTER", f.portrait2, 0, 0)
+	f.portrait:SetSize(22,22)
 
 	f.portrait.tex = f.portrait:CreateTexture()
-	f.portrait.tex:SetSize(25,25)
+	f.portrait.tex:SetSize(22,22)
 	f.portrait.tex:SetAllPoints(f.portrait)
-	f.portrait.tex:SetDrawLayer("BORDER")
+	f.portrait.tex:SetDrawLayer("BACKGROUND")
+	f.portrait.tex:SetBlendMode("ALPHAKEY")
+	SetPortraitTexture(f.portrait.tex, "nameplate1")
+
+	f.portrait.tex:Show()
 end
 
 function addon:CreateElite(frame, f)
@@ -338,9 +346,9 @@ function addon:UpdateElite(frame, f, status)
 end
 
 function addon:UpdatePortrait(frame, f, unit)
-	f.portrait.tex:Show()
+	--f.portrait.tex:Show()
 	--print("Portraits updating!")
-	SetPortraitTexture(f.portrait.tex, unit)
+	SetPortraitTexture(f.portrait.tex, "nameplate1")
 end
 
 function addon:CreateLevel(frame, f)
@@ -368,7 +376,6 @@ function addon:CreateLevel(frame, f)
 		f.level.enabled = true
 	end
 end
-
 function addon:UpdateLevel(f, trivial)
 	if trivial then
 		f.level:Hide()
@@ -397,7 +404,6 @@ function addon:UpdateLevel(f, trivial)
 
 		f.level:ClearAllPoints()
 		f.level:SetPoint("CENTER", f.levelBorder, "CENTER", 1, 1)
-
 	end
 end
 ------------------------------------------------------------------- Name text --
@@ -484,12 +490,12 @@ end
 
 function addon:UpdateOccupation(f, unit)
 	if f.occupation:GetText() == nil then
-		--print("Updating occupation!")
 		local occupation = ScanUnitTooltip2ndLine(unit)
 		if occupation ~= nil then
 			f.occupation:SetText('<'..occupation..'>')
 				if GetGuildInfo("player") == occupation then
 					f.occupation:SetTextColor(0.2,0.5,0.9,1)
+
 				end
 			f.occupation:Show()
 		end
